@@ -165,7 +165,7 @@ class Drawer:
         self.make_canvas_img_from_array(self.cur_img)
         self.root.title(self.input_file_name.split('/')[-1])
         self.id_label.config(text='0/399')
-        self.out_dir = self.input_file_name.split('.oct')[0]
+        self.out_dir = self.input_file_name.split('.OCT')[0]
         try:
             os.mkdir(self.out_dir)
         except FileExistsError:
