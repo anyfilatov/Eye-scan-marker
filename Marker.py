@@ -3,7 +3,7 @@ import struct
 import numpy as np
 from tkinter import *
 from tkinter import filedialog
-import PIL.Image, PIL.ImageTk, PIL.ImageDraw
+import PIL.Image, PIL.ImageTk, PIL.ImageDraw, PIL.ImageOps
 import os
 
 
@@ -61,7 +61,7 @@ class Drawer:
         self.img_index = 0
 
         self.canvas = Canvas(self.root, height=640, width=1600)
-        self.canvas.grid(row=1, column=1, columnspan=16, pady=10)
+        self.canvas.grid(row=3, column=0, columnspan=16, pady=10)
         self.canvas.bind("<B1-Motion>", self.draw)
         self.canvas.bind("<Button-1>", self.draw)
 
@@ -69,24 +69,27 @@ class Drawer:
         self.mask_drawer = PIL.ImageDraw.Draw(self.mask_pil)
 
         self.id_label = Label(self.root, text='N/A')
-        self.id_label.grid(row=0, column=8,pady=5)
+        self.id_label.grid(row=1, column=3,pady=5)
         self.class1_btn = Button(self.root, text="PAMM (red)\nselected", width=10, command=lambda: self.set_brush("red"))
-        self.class1_btn.grid(row=0, column=14, pady=5)
+        self.class1_btn.grid(row=0, column=3, pady=5)
         self.class2_btn = Button(self.root, text="DRIL (green)", width=10, command=lambda: self.set_brush("green"))
-        self.class2_btn.grid(row=0, column=15, pady=5)
+        self.class2_btn.grid(row=0, column=4, pady=5)
         self.class3_btn = Button(self.root, text="IRNFL (blue)", width=10, command=lambda: self.set_brush("blue"))
-        self.class3_btn.grid(row=0, column=16, pady=5)
+        self.class3_btn.grid(row=0, column=5, pady=5)
 
         self.prev_btn = Button(self.root, text="<", width=5, command=lambda: self.goto_prev_img())
         self.prev_btn.grid(row=1, column=0)
         self.next_btn = Button(self.root, text=">", width=5, command=lambda: self.goto_next_img())
-        self.next_btn.grid(row=1, column=17)
+        self.next_btn.grid(row=1, column=5)
 
         self.browse_btn = Button(self.root, text="Browse the .OCT file", width=18, command=lambda: self.open_file())
-        self.browse_btn.grid(row=0, column=5, pady=5)
-        self.save_btn = Button(self.root, text="Save", width=100,
+        self.browse_btn.grid(row=0, column=0, pady=5)
+        self.save_btn = Button(self.root, text="Save only mask", width=70,
                                command=lambda: self.save_img_to_file(str(self.img_index)))
-        self.save_btn.grid(row=2, column=8)
+        self.save_btn.grid(row=0, column=8)
+        self.save_btn_full = Button(self.root, text="Save mask and image with mask", width=70,
+                               command=lambda: self.save_united_img_mask(str(self.img_index)))
+        self.save_btn_full.grid(row=1, column=8)
 
     def set_brush(self, color):
         self.brush = color
@@ -153,6 +156,23 @@ class Drawer:
         if self.input_file_name == '':
             print('Choose a file before saving')
             return
+        self.mask_pil.save(self.out_dir + '/' + filename + '.png', format='png')
+        print('Image ' + self.out_dir + '/' + filename + '.png saved')
+
+    def save_united_img_mask(self, filename):
+        if self.input_file_name == '':
+            print('Choose a file before saving')
+            return
+
+        gray_mask = PIL.ImageOps.invert(self.mask_pil.convert('L'))
+        gray_mask = gray_mask.point(lambda p: p > 150 and 255)
+
+        rgb_img = PIL.Image.new("RGB", self.pil_img.size)
+        rgb_img.paste(self.pil_img)
+        rgb_img.paste(self.mask_pil, (0,0), gray_mask)
+        rgb_img.save(self.out_dir + '/' + filename + '_full.png', format='png')
+        print('Image ' + self.out_dir + '/' + filename + '_full.png saved')
+
         self.mask_pil.save(self.out_dir + '/' + filename + '.png', format='png')
         print('Image ' + self.out_dir + '/' + filename + '.png saved')
 
